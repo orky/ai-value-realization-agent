@@ -1,5 +1,6 @@
 "use client";
 import React, { useMemo, useState } from "react";
+import { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,71 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { motion } from "framer-motion";
 import { BarChart3, Briefcase, Calculator, CheckCircle2, ClipboardList, Rocket, SlidersHorizontal, Sparkles, Target } from "lucide-react";
 
-const initialCompany = {
+type Company = {
+  name: string;
+  industry: string;
+  employees: number;
+  revenue: number;
+  strategicPriorities: string;
+  aiMaturity: string;
+};
+
+type Assumptions = {
+  capability: number;
+  workflowFit: number;
+  adoption: number;
+  autonomy: number;
+  confidence: number;
+  timeSavedRatio: number;
+  championStrength: number;
+  resistanceLevel: number;
+};
+
+type Workflow = {
+  id: number;
+  function: string;
+  name: string;
+  owner: string;
+  monthlyVolume: number;
+  timePerTaskMinutes: number;
+  hourlyCost: number;
+  errorRate: number;
+  cycleTimeHours: number;
+  complianceSensitivity: "low" | "medium" | "high";
+  painPoints: string;
+};
+
+type UseCaseScores = {
+  valueScore: number;
+  feasibilityScore: number;
+  adoptionScore: number;
+  autonomyScore: number;
+  ttvScore: number;
+  priorityScore: number;
+};
+
+type UseCase = {
+  id: number;
+  workflowId: number;
+  name: string;
+  function: string;
+  pattern: "Assistant" | "Copilot" | "Agent";
+  capability: number;
+  workflowFit: number;
+  adoption: number;
+  autonomy: number;
+  confidence: number;
+  annualEconomicValue: number;
+  annualValueLow: number;
+  annualValueMid: number;
+  annualValueHigh: number;
+  realizationRate: number;
+  timeSavedRatio: number;
+  championStrength: number;
+  resistanceLevel: number;
+} & UseCaseScores;
+
+const initialCompany: Company = {
   name: "Acme Support Cloud",
   industry: "B2B SaaS",
   employees: 2500,
@@ -22,7 +87,7 @@ const initialCompany = {
   aiMaturity: "emerging",
 };
 
-const initialAssumptions = {
+const initialAssumptions: Assumptions = {
   capability: 0.72,
   workflowFit: 0.78,
   adoption: 0.72,
@@ -33,7 +98,7 @@ const initialAssumptions = {
   resistanceLevel: 0.4,
 };
 
-const initialWorkflows = [
+const initialWorkflows: Workflow[] = [
   {
     id: 1,
     function: "Support",
@@ -75,11 +140,11 @@ const initialWorkflows = [
   },
 ];
 
-function clamp(value, min, max) {
+function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
-function formatCurrency(value) {
+function formatCurrency(value: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -87,7 +152,7 @@ function formatCurrency(value) {
   }).format(value || 0);
 }
 
-function scoreUseCase(workflow) {
+function scoreUseCase(workflow: Workflow): UseCaseScores {
   const annualLaborBaseline = workflow.monthlyVolume * 12 * (workflow.timePerTaskMinutes / 60) * workflow.hourlyCost;
 
   const valueScore = clamp(
@@ -145,7 +210,7 @@ function scoreUseCase(workflow) {
   };
 }
 
-function buildUseCase(workflow, assumptions) {
+function buildUseCase(workflow: Workflow, assumptions: Assumptions): UseCase {
   const scores = scoreUseCase(workflow);
 
   const sensitivityCapability = workflow.complianceSensitivity === "low" ? 0.08 : workflow.complianceSensitivity === "medium" ? 0 : -0.1;
@@ -196,12 +261,24 @@ function buildUseCase(workflow, assumptions) {
   };
 }
 
-function AssumptionInput({ label, value, onChange, helper }) {
+function AssumptionInput({
+  label,
+  value,
+  onChange,
+  helper,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  helper?: string;
+}) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-3">
         <Label>{label}</Label>
-        <span className="text-sm font-medium text-slate-700">{Math.round(Number(value) * 100)}%</span>
+        <span className="text-sm font-medium text-slate-700">
+          {Math.round(Number(value) * 100)}%
+        </span>
       </div>
       <Input
         type="range"
@@ -217,30 +294,40 @@ function AssumptionInput({ label, value, onChange, helper }) {
   );
 }
 
-function KPI({ label, value, subtext, icon: Icon }) {
-  return (
-    <Card className="rounded-2xl shadow-sm border-slate-200">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm text-slate-500">{label}</p>
-            <p className="text-2xl font-semibold tracking-tight mt-1">{value}</p>
-            {subtext ? <p className="text-xs text-slate-500 mt-1">{subtext}</p> : null}
+function KPI({
+    label,
+    value,
+    subtext,
+    icon: Icon,
+  }: {
+    label: string;
+    value: string;
+    subtext?: string;
+    icon: LucideIcon;
+  }) {
+    return (
+      <Card className="rounded-2xl shadow-sm border-slate-200">
+        <CardContent className="p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-slate-500">{label}</p>
+              <p className="text-2xl font-semibold tracking-tight mt-1">{value}</p>
+              {subtext ? <p className="text-xs text-slate-500 mt-1">{subtext}</p> : null}
+            </div>
+            <div className="rounded-2xl p-3 bg-slate-50">
+              <Icon className="h-5 w-5" />
+            </div>
           </div>
-          <div className="rounded-2xl p-3 bg-slate-50">
-            <Icon className="h-5 w-5" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+        </CardContent>
+      </Card>
+    );
+  }
 
 export default function AIValueRealizationAgentApp() {
-  const [company, setCompany] = useState(initialCompany);
-  const [workflows, setWorkflows] = useState(initialWorkflows);
-  const [assumptions, setAssumptions] = useState(initialAssumptions);
-  const [draftWorkflow, setDraftWorkflow] = useState({
+  const [company, setCompany] = useState<Company>(initialCompany);
+const [workflows, setWorkflows] = useState<Workflow[]>(initialWorkflows);
+const [assumptions, setAssumptions] = useState<Assumptions>(initialAssumptions);
+const [draftWorkflow, setDraftWorkflow] = useState<Omit<Workflow, "id">>({
     function: "Support",
     name: "",
     owner: "",
@@ -297,9 +384,9 @@ export default function AIValueRealizationAgentApp() {
 
   const topUseCase = useCases[0];
 
-  function updateAssumption(key, value) {
-    setAssumptions((current) => ({ ...current, [key]: value }));
-  }
+  function updateAssumption(key: keyof Assumptions, value: number) {
+  setAssumptions((current) => ({ ...current, [key]: value }));
+}
 
   function resetAssumptions() {
     setAssumptions(initialAssumptions);
@@ -467,24 +554,26 @@ export default function AIValueRealizationAgentApp() {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Monthly volume</Label>
-                      <Input type="number" value={draftWorkflow.monthlyVolume} onChange={(e) => setDraftWorkflow({ ...draftWorkflow, monthlyVolume: e.target.value })} />
+                      <Input type="number" value={draftWorkflow.monthlyVolume} onChange={(e) => setDraftWorkflow({ ...draftWorkflow, monthlyVolume: Number(e.target.value) })} />
                     </div>
                     <div className="space-y-2">
                       <Label>Time per task (minutes)</Label>
-                      <Input type="number" value={draftWorkflow.timePerTaskMinutes} onChange={(e) => setDraftWorkflow({ ...draftWorkflow, timePerTaskMinutes: e.target.value })} />
+                      <Input type="number" value={draftWorkflow.timePerTaskMinutes} onChange={(e) => setDraftWorkflow({ ...draftWorkflow, timePerTaskMinutes: Number(e.target.value) })} />
                     </div>
                     <div className="space-y-2">
                       <Label>Hourly cost</Label>
-                      <Input type="number" value={draftWorkflow.hourlyCost} onChange={(e) => setDraftWorkflow({ ...draftWorkflow, hourlyCost: e.target.value })} />
+                      <Input type="number" value={draftWorkflow.hourlyCost} onChange={(e) => setDraftWorkflow({ ...draftWorkflow, hourlyCost: Number(e.target.value) })} />
                     </div>
                     <div className="space-y-2">
                       <Label>Cycle time (hours)</Label>
-                      <Input type="number" value={draftWorkflow.cycleTimeHours} onChange={(e) => setDraftWorkflow({ ...draftWorkflow, cycleTimeHours: e.target.value })} />
+                      <Input type="number" value={draftWorkflow.cycleTimeHours} onChange={(e) => setDraftWorkflow({ ...draftWorkflow, cycleTimeHours: Number(e.target.value) })} />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label>Compliance sensitivity</Label>
-                    <Select value={draftWorkflow.complianceSensitivity} onValueChange={(value) => setDraftWorkflow({ ...draftWorkflow, complianceSensitivity: value })}>
+                    <Select value={draftWorkflow.complianceSensitivity} onValueChange={(value: "low" | "medium" | "high") =>
+  setDraftWorkflow({ ...draftWorkflow, complianceSensitivity: value })
+}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="low">Low</SelectItem>
